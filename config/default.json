@@ -1,0 +1,5 @@
+{
+  "db": "mongodb://localhost:27017/budget-app-dev",
+  "port": 8080,
+  "jwtSecret": "flasjdlfkjsdlkjflksjdflkjsd23423"
+}
