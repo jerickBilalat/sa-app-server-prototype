@@ -1,22 +1,24 @@
 import express from 'express'
 import fixedSpendingModel from '../models/fixedSpending'
+import mongoose from 'mongoose'
+import requierSignin from '../middlewares/requireSignIn'
 
 const router = express.Router()
 
 
-router.get('/', getFixedSpendings)
+router.get('/', requierSignin, getFixedSpendings)
 
-router.get('/by-pay-period', getFixedSpendingsByPayPeriodId)
+router.get('/by-pay-period', requierSignin, getFixedSpendingsByPayPeriodId)
 
-router.post('/create-fixed-spending', createSpendingTransaction)
+router.post('/create-fixed-spending', requierSignin, createFixedSpending)
 
-router.put('/update-fixed-spending', updateFixedSpending)
+router.put('/update-fixed-spending', requierSignin, updateFixedSpending)
 
-router.put('/update-multiple-fixed-spendings', updateMultipleFixedSpendings)
+router.put('/update-multiple-fixed-spendings', requierSignin, updateMultipleFixedSpendings)
 
 function getFixedSpendings(req, res, next) {
   fixedSpendingModel
-  .find()
+  .find({refUser: req.user.id})
   .sort("createddAt")
   .exec( (err, data) => {
     if(err) return next(err)
@@ -27,7 +29,7 @@ function getFixedSpendings(req, res, next) {
 function getFixedSpendingsByPayPeriodId(req, res, next) {
   const {payPeriodId} = req.query;
   fixedSpendingModel
-    .find({ refPayPeriods: {$all:[payPeriodId]} })
+    .find({ refPayPeriods: {$all:[payPeriodId]}, refUser: req.user.id })
     .exec( (err, data) => {
       if(err) return next(err)
       res.send(data)
@@ -44,10 +46,10 @@ function getFixedSpendingsByPayPeriod(req, res, next) {
     })
 }
 
-function createSpendingTransaction(req, res, next) {
+function createFixedSpending(req, res, next) {
   const {description, amount, payPeriodId} = req.body;
 
-  fixedSpendingModel.create({description, amount, refPayPeriods: [payPeriodId] }, (err, data) => {
+  fixedSpendingModel.create({description, amount, refPayPeriods: [payPeriodId], refUser: mongoose.Types.ObjectId(req.user.id) }, (err, data) => {
     if(err) return next(err)
     res.send(data)
   })  

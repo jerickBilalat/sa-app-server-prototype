@@ -1,6 +1,11 @@
 import mongoose from 'mongoose'
 
 const spendingTransaction = new mongoose.Schema({
+  refUser: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
   description: {
     type: String,
     required: true

@@ -1,11 +1,14 @@
 import UserCollection from '../models/user'
 
 export default function (req, res, next) {
-  const {name, password} = req.body
+  const {username, password} = req.body
+  console.log(username)
+  console.log(password)
+
   // todo sanitize input
-  UserCollection.findOne({name}, (err, user) => {
+  UserCollection.findOne({username}, (err, user) => {
     if(err) return res.status(500).send({error: {message: "Server Error"}})
-    if(!user) return res.status(401).send({error: {message: `Did not find user with name of ${name}`}})
+    if(!user) return res.status(401).send({error: {message: `Did not find user with username of ${username}`}})
 
     user.comparePassword( password, (err, isMatch) => {
       if(err) return res.status(500).send({error: {message: "Server Error"}})

@@ -5,26 +5,26 @@ import mongoose from 'mongoose'
 import fixedSpendingModel from '../models/fixedSpending'
 import goalModel from '../models/goal'
 import emrFundModel from '../models/emergencyFund'
-
+import requierSignin from '../middlewares/requireSignIn'
 
 
 const router = express.Router()
 
 
-router.get('/', getPayPeriods)
+router.get('/', requierSignin, getPayPeriods)
 
-router.get('/current', getCurrentPayPeriodState)
+router.get('/current', requierSignin, getCurrentPayPeriodState)
 
-router.post( '/create-initial-pay-period', createInitialPayPeriod)
+router.post( '/create-initial-pay-period', requierSignin, createInitialPayPeriod)
 
-router.post( '/create-pay-period', createPayPeriod)
+router.post( '/create-pay-period', requierSignin, createPayPeriod)
 
-router.put('/update-pay-period', updatePayPeriod)
+router.put('/update-pay-period', requierSignin, updatePayPeriod)
 
 
 function getPayPeriods(req, res, next) {
   payPeriodModel
-  .find()
+  .find({refUser: req.user.id})
   .sort("createddAt")
   .exec( (err, data) => {
     if(err) return next(err)
@@ -42,12 +42,12 @@ function calculateBudgetHealth(payPeriods) {
 
 function getCurrentPayPeriodState(req, res, next) {
   payPeriodModel
-  .find()
+  .find({refUser: req.user.id})
   .sort("createddAt")
   .exec( (err, data) => {
     if(err) return next(err)
     res.send({
-      currentPayPeriod: data[data.length-1],
+      payPeriod: data[data.length-1],
       budgetHealth: calculateBudgetHealth(data)})
   })
 }
@@ -55,7 +55,8 @@ function getCurrentPayPeriodState(req, res, next) {
 function createInitialPayPeriod(req, res, next) {
   const {pay, remainingBudget} = req.body;
 
-  payPeriodModel.create({pay, remainingBudget}, (err, data) => {
+  payPeriodModel
+    .create({ refUser: mongoose.Types.ObjectId(req.user.id), pay, remainingBudget}, (err, data) => {
     if(err) return next(err)
     res.send(data)
   })  

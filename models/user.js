@@ -4,19 +4,36 @@ import bcrypt from 'bcrypt-nodejs'
 const Schema = mongoose.Schema
 
 const userSchema = new Schema({
-  name: {
+  username: {
     type: String,
     required: true,
     unique: 1,
-    minlength: 2
+    minlength: 6
   },
   password: {
     type: String,
     required: true
   },
-  admin: {
-    type: Boolean,
-    default: false
+  emrtype: {
+    type: Number,
+    default: 3
+  },
+  emrRemainingBalance: {
+    type: String,
+    default: "0.00"
+  },
+  averagePayPerPeriod: {
+    type: String,
+    required: true
+  },
+  numberOfPayPeriodPerMonth: {
+    type: Number,
+    required: true,
+    default: 2
+  },
+  emrCommitmentAmount: {
+    type: String,
+    default: "0.00"
   }
 })
 
