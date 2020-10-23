@@ -3,6 +3,7 @@ import config from 'config'
 import mongoose from 'mongoose'
 import cors from 'cors'
 import bodyParser from 'body-parser'
+import morgan from 'morgan'
 
 // routes
 import payPeriodRoutes from './routes/payPeriod'
@@ -74,5 +75,9 @@ app.use(function(err, req, res, next) {
 
 });
 
+if(config.util.getEnv('NODE_CONFIG_ENV') === "development") {
+  app.use(morgan('tiny'))
+}
+
 const PORT = process.env.PORT || config.get('port') || 8080;
-app.listen(PORT, () => { console.log(`Server running at port ${PORT} with the database ${config.get('db')}`)})
+app.listen(PORT, () => { console.log(`Server running ${config.util.getEnv('NODE_CONFIG_ENV')} at port ${PORT} with the database ${config.get('db')}`)})
