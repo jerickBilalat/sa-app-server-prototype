@@ -2,8 +2,6 @@ import UserCollection from '../models/user'
 
 export default function (req, res, next) {
   const {username, password} = req.body
-  console.log(username)
-  console.log(password)
 
   // todo sanitize input
   UserCollection.findOne({username}, (err, user) => {

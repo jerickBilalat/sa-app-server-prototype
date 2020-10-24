@@ -14,7 +14,7 @@ import emergencyFundRoutes from './routes/emergencyFund'
 import authRoutes from './routes/auth'
 
 mongoose
-  .connect(config.get('db'), {useNewUrlParser: true, useUnifiedTopology: true})
+  .connect(config.get('db_with_replica_sets'), {useNewUrlParser: true, useUnifiedTopology: true})
   .then( () => {
     console.log('DB Connection Successful')
   })
@@ -80,4 +80,4 @@ if(config.util.getEnv('NODE_CONFIG_ENV') === "development") {
 }
 
 const PORT = process.env.PORT || config.get('port') || 8080;
-app.listen(PORT, () => { console.log(`Server running ${config.util.getEnv('NODE_CONFIG_ENV')} at port ${PORT} with the database ${config.get('db')}`)})
+app.listen(PORT, () => { console.log(`Server running ${config.util.getEnv('NODE_CONFIG_ENV')} at port ${PORT} with the database ${config.get('db_with_replica_sets')}`)})

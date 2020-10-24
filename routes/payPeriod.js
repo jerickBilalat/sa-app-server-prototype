@@ -6,6 +6,7 @@ import fixedSpendingModel from '../models/fixedSpending'
 import goalModel from '../models/goal'
 import emrFundModel from '../models/emergencyFund'
 import requierSignin from '../middlewares/requireSignIn'
+import userModel from '../models/user'
 
 
 const router = express.Router()
@@ -52,14 +53,37 @@ function getCurrentPayPeriodState(req, res, next) {
   })
 }
 
-function createInitialPayPeriod(req, res, next) {
-  const {pay, remainingBudget} = req.body;
+async function createInitialPayPeriod(req, res, next) {
+ 
 
-  payPeriodModel
-    .create({ refUser: mongoose.Types.ObjectId(req.user.id), pay, remainingBudget}, (err, data) => {
-    if(err) return next(err)
-    res.send(data)
-  })  
+  const session = await mongoose.startSession()
+  session.startTransaction()
+
+  try {
+
+    // create INITIAL payperiod
+    const pay = currency(req.body.pay)
+    const payPeriod = await payPeriodModel.create({refUser: mongoose.Types.ObjectId(req.user.id), pay})
+
+    // update user settings to to apply ermCommitment amount to emrRemainingBalance
+    const userSettings = await userModel.findById(req.user.id).exec()
+
+    await userModel
+      .findOneAndUpdate(req.user.id, {emrRemainingBalance: userSettings.emrCommitmentAmount})
+      .exec()
+
+    await session.commitTransaction();
+
+    res.send(payPeriod)
+    
+  } catch (error) {
+    await session.abortTransaction()
+    next(error)
+    
+  } finally {
+    session.endSession()
+  }
+  
 
 }
 
@@ -73,35 +97,30 @@ async function createPayPeriod(req, res, next) {
   try {
 
     // create new payperiod
-    const payPeriod = await payPeriodModel.create({pay})
+    const newPayPeriod = await payPeriodModel.create({refUser: mongoose.Types.ObjectId(req.user.id), pay})
 
     // udpate previous PayPeriod remainingBudget
     await payPeriodModel.findByIdAndUpdate(prevPayPeriodID, {remainingBudget})
 
-    // update emr fund
-     emrFundModel.find({}).exec( (err, data) => {
-      if(err) return next(err)
-      const emrFund = data[0]
-      emrFundModel
-        .findOneAndUpdate(emrFund._id, {remainingBalance: currency(emrFund.remainingBalance).add(emrFund.commitmentAmount)})
-        .exec( (err, data) => {
-          if(err) return next(err)
-        })
-    })
+    // update user settings to to apply ermCommitment amount to emrRemainingBalance
+    const userSettings = await userModel.findById(req.user.id).exec()
+    const newUserSettings = await userModel
+      .findOneAndUpdate(req.user.id, {emrRemainingBalance: currency(userSettings.emrCommitmentAmount).add(userSettings.emrRemainingBalance)}, {new: true})
+      .exec()
 
     //update continuedFixedSpendings
     if(continuedFixedSpendings.length > 0) {
-      await fixedSpendingModel.updateMany({ _id: {$in: [...continuedFixedSpendings]}}, { $push: {refPayPeriods: payPeriod._id} } ).session(session)
+      await fixedSpendingModel.updateMany({ _id: {$in: [...continuedFixedSpendings]}}, { $push: {refPayPeriods: newPayPeriod._id} } ).session(session)
     }
 
     // update continuedGoals
     if(continuedGoals.length > 0) {
-      await goalModel.updateMany({ _id: {$in: [...continuedGoals]}}, { $push: {refPayPeriods: payPeriod._id} } ).session(session)
+      await goalModel.updateMany({ _id: {$in: [...continuedGoals]}}, { $push: {refPayPeriods: newPayPeriod._id} } ).session(session)
     }
 
     await session.commitTransaction();
 
-    res.send({status: "ok"})
+    res.send({status:'ok'})
     
   } catch (error) {
     await session.abortTransaction()
