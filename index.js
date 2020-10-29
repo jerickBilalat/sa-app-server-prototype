@@ -28,6 +28,9 @@ app.use(cors());
 app.use(bodyParser.urlencoded({extended:true}))
 app.use(bodyParser.json());
 
+if(config.util.getEnv('NODE_CONFIG_ENV') === "development") {
+  app.use(morgan('tiny'))
+}
 app.use('/api/pay-period', payPeriodRoutes)
 app.use('/api/spending-transaction', spendingTransactionRoutes)
 app.use('/api/fixed-spending', fixedSpendingRoutes)
@@ -75,9 +78,6 @@ app.use(function(err, req, res, next) {
 
 });
 
-if(config.util.getEnv('NODE_CONFIG_ENV') === "development") {
-  app.use(morgan('tiny'))
-}
 
 const PORT = process.env.PORT || config.get('port') || 8080;
 app.listen(PORT, () => { console.log(`Server running ${config.util.getEnv('NODE_CONFIG_ENV')} at port ${PORT} with the database ${config.get('db_with_replica_sets')}`)})
