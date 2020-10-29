@@ -100,7 +100,9 @@ async function createPayPeriod(req, res, next) {
     const newPayPeriod = await payPeriodModel.create({refUser: mongoose.Types.ObjectId(req.user.id), pay})
 
     // udpate previous PayPeriod remainingBudget
-    await payPeriodModel.findByIdAndUpdate(prevPayPeriodID, {remainingBudget})
+    if(prevPayPeriodID) {
+      await payPeriodModel.findByIdAndUpdate(prevPayPeriodID, {remainingBudget})
+    }
 
     // update user settings to to apply ermCommitment amount to emrRemainingBalance
     const userSettings = await userModel.findById(req.user.id).exec()
