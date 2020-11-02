@@ -15,7 +15,6 @@ export default function auth(req, res, next) {
     UserCollection.findById(decoded.id, (err, user) => {
       if(err) return res.status(500).send({error: {message: "Server Error"}})
       if(!user) return res.status(401).send({error: {message: `Did not find user with username of `}})
-
       req.user = user
       return next()
 

@@ -55,7 +55,6 @@ function getCurrentPayPeriodState(req, res, next) {
 
 async function createInitialPayPeriod(req, res, next) {
  
-
   const session = await mongoose.startSession()
   session.startTransaction()
 
@@ -74,7 +73,7 @@ async function createInitialPayPeriod(req, res, next) {
 
     await session.commitTransaction();
 
-    res.send(payPeriod)
+    res.send({status:'ok'})
     
   } catch (error) {
     await session.abortTransaction()
@@ -89,6 +88,7 @@ async function createInitialPayPeriod(req, res, next) {
 
 async function createPayPeriod(req, res, next) {
   const { pay, remainingBudget, continuedFixedSpendings, continuedGoals, prevPayPeriodID } = req.body
+  const userID = req.user.id
 
   const session = await mongoose.startSession()
 
@@ -97,7 +97,7 @@ async function createPayPeriod(req, res, next) {
   try {
 
     // create new payperiod
-    const newPayPeriod = await payPeriodModel.create({refUser: mongoose.Types.ObjectId(req.user.id), pay})
+    const newPayPeriod = await payPeriodModel.create({refUser: mongoose.Types.ObjectId(userID), pay})
 
     // udpate previous PayPeriod remainingBudget
     if(prevPayPeriodID) {
@@ -105,9 +105,10 @@ async function createPayPeriod(req, res, next) {
     }
 
     // update user settings to to apply ermCommitment amount to emrRemainingBalance
-    const userSettings = await userModel.findById(req.user.id).exec()
-    const newUserSettings = await userModel
-      .findOneAndUpdate(req.user.id, {emrRemainingBalance: currency(userSettings.emrCommitmentAmount).add(userSettings.emrRemainingBalance)}, {new: true})
+    const userSettings = await userModel.findById(userID).exec()
+    
+    await userModel
+      .findOneAndUpdate({ _id: userID}, {emrRemainingBalance: currency(userSettings.emrCommitmentAmount).add(userSettings.emrRemainingBalance)}, {new: true})
       .exec()
 
     //update continuedFixedSpendings

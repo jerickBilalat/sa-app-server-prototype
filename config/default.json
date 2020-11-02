@@ -1,6 +1,6 @@
 {
   "db": "mongodb://localhost:27017/budget-app-dev",
-  "db_with_replica_sets": "mongodb://LAPTOP-PAFIDJET:27017,LAPTOP-PAFIDJET:27018,LAPTOP-PAFIDJET:27019/budget-app-dev?replicaSet=rs",
+  "db_with_replica_sets": "mongodb://localhost:27017,localhost:27018,localhost:27019/budget-app-dev?replicaSet=rs",
   "port": 8080,
   "jwtSecret": "flasjdlfkjsdlkjflksjdflkjsd23423"
 }
