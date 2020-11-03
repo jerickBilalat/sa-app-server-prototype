@@ -18,6 +18,10 @@ const spendingTransaction = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'PayPeriod',
     required: true
+  },
+  category: {
+    type: String,
+    required: true
   }
 }, {timestamps: true}
 )

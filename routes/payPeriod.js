@@ -54,36 +54,16 @@ function getCurrentPayPeriodState(req, res, next) {
 }
 
 async function createInitialPayPeriod(req, res, next) {
- 
-  const session = await mongoose.startSession()
-  session.startTransaction()
 
   try {
-
     // create INITIAL payperiod
     const pay = currency(req.body.pay)
     const payPeriod = await payPeriodModel.create({refUser: mongoose.Types.ObjectId(req.user.id), pay})
-
-    // update user settings to to apply ermCommitment amount to emrRemainingBalance
-    const userSettings = await userModel.findById(req.user.id).exec()
-
-    await userModel
-      .findOneAndUpdate(req.user.id, {emrRemainingBalance: userSettings.emrCommitmentAmount})
-      .exec()
-
-    await session.commitTransaction();
-
     res.send({status:'ok'})
     
   } catch (error) {
-    await session.abortTransaction()
     next(error)
-    
-  } finally {
-    session.endSession()
   }
-  
-
 }
 
 async function createPayPeriod(req, res, next) {

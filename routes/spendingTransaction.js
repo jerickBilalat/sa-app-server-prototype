@@ -24,9 +24,9 @@ function getAllSpendingTransactions(req, res, next) {
 }
 
 function getSpendingTransactionsByPayPeriod(req, res, next) {
-  const {payPeriodId} = req.query;
+  const {payPeriodId, cat} = req.query;
   spendingTransactionModel
-    .find({refPayPeriod: payPeriodId, refUser: req.user.id})
+    .find({refPayPeriod: payPeriodId, refUser: req.user.id, category: cat})
     .exec( (err, data) => {
       if(err) return next(err)
       res.send(data)
@@ -34,9 +34,9 @@ function getSpendingTransactionsByPayPeriod(req, res, next) {
 }
 
 function createSpendingTransaction(req, res, next) {
-  const {description, amount, payPeriodId} = req.body;
+  const {description, amount, payPeriodId, category} = req.body;
 
-  spendingTransactionModel.create({description, amount, refPayPeriod: payPeriodId, refUser: mongoose.Types.ObjectId(req.user.id) }, (err, data) => {
+  spendingTransactionModel.create({description, amount, category, refPayPeriod: payPeriodId, refUser: mongoose.Types.ObjectId(req.user.id) }, (err, data) => {
     if(err) return next(err)
     res.send(data)
   })  
